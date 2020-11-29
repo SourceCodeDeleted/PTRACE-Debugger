@@ -44,7 +44,8 @@ break 0x12345678  : to set break point at 0x12345678
 continue          : continue or c may be used
 exit              : exit the program
 infobreak         : List break points
-examined          : Video DWORD at location 
+examined          : Video DWORD at location
+info registers    : show registers  
 
 
 
@@ -57,9 +58,37 @@ std::map < unsigned int, unsigned int > BreakPoints;
 
 void InfoRegisters( pid_t child )
 {
+    struct user_regs_struct regs;
+    ptrace(PTRACE_GETREGS, child, 0, &regs);
 
+/*
+eax            0x0                 0x0
+ecx            0x0                 0x0
+edx            0x0                 0x0
+ebx            0x0                 0x0
+esp            0xffffd080          0xffffd080
+ebp            0x0                 0x0
+esi            0x0                 0x0
+edi            0x0                 0x0
+eip            0xf7fd6c70          0xf7fd6c70
+eflags         0x200               [ IF ]
+cs             0x23                0x23
+ss             0x2b                0x2b
+ds             0x2b                0x2b
+es             0x2b                0x2b
+fs             0x0                 0x0
+gs             0x0                 0x0
+
+*/
+printf("######### Listing  Registers #########\n");
+
+    printf(" EAX:  0x%08x\n ECX:  0x%08x\n EDX:  0x%08x\n EBX:  0x%08x\n ESP:  0x%08x\n EBP:  0x%08x\n ESI:  0x%08x\n EDI:  0x%08x\n EIP:  0x%08x\n"
+    , regs.eax,regs.ecx,regs.edx,regs.ebx,regs.esp,regs.ebp,regs.esi,regs.edi,regs.eip ); // exterend here is you want more registers.
+
+    printf("######### Finished  Registers #########\n");
 
 }
+
 
 
 
@@ -112,13 +141,17 @@ void execute_debugee (pid_t child, const std::string& prog_name)
     execl(prog_name.c_str(), prog_name.c_str(), nullptr);
 }
 
+
 void Nexti(pid_t child)
 {
+    int wait_status;
+    
     /* Make the child execute another instruction */
     if (ptrace(PTRACE_SINGLESTEP, child, 0, 0) < 0) {
         perror("[!] Error in PTRACE_SINGLESTEP");
         return;
     }
+    wait(&wait_status);
 
 }
 
@@ -216,7 +249,7 @@ else if (command.find("examined") == 0)
     // examined 0x56555527
     std::istringstream iss(command);
     std::size_t  LastWord = command.find_last_of(' ');
-    std::string  addr = command.substr(LastWord+1); // should be 0x########
+    std::string  addr = command.substr(LastWord + 1); // should be 0x########
 
      // convert address which is in string to unsigned int. 
      unsigned int uiaddr;
@@ -227,12 +260,17 @@ else if (command.find("examined") == 0)
     CheckDWORDMem(child, uiaddr);
 }
 
+else if (command == "info registers" || command ==  "i r")
+{
+    InfoRegisters(child);
 
+
+}
 
 else if (command.empty()){
     //printf("command empty");
     lastcommand = command;
-    //nexti( child );
+    Nexti( child );
 }
 else {
     printf("[-] Unknown command entered\n");

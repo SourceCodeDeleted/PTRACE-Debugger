@@ -22,12 +22,12 @@ g++ -m32 debugger.cpp -o debugger
 ##### Commands Available
 ```
 ######### Commands ##############
-next              : to step 
-break 0x12345678  : to set break point at 0x12345678
-continue          : continue or c may be used
-exit              : exit the program
+next              : To step 
+break 0x12345678  : To set break point at 0x12345678
+continue          : Continue or c may be used
+exit              : Exit the program
 infobreak         : List break points
-examined          : Video DWORD at location 
+examined          : view memory size DWORD at location 
 
 
 
